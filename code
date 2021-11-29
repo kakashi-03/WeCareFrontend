@@ -1,34 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { CoachprofileService } from './coachprofile.service';
-import { Router } from '@angular/router';
-
-@Component({
-  selector: 'app-coachprofile',
-  templateUrl: './coachprofile.component.html',
-  styleUrls: ['./coachprofile.component.css'],
-  providers:[CoachprofileService]
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+@Injectable({
+  providedIn: 'root'
 })
-export class CoachprofileComponent implements OnInit {
- 
-  userDetail!:any;
-  errorMessage:string='';
-  constructor(private router:Router,private coachprofileService:CoachprofileService) { }
+export class CoachprofileService {
+  cachedCoachId:any=sessionStorage.getItem('CoachId');
+  baseUrl:string=`http://localhost:3333/coaches/${this.cachedCoachId}`;
+  constructor(private http:HttpClient) { }
 
-  ngOnInit(): void {
-    if(!sessionStorage.getItem('CoachId'))
-    {
-      this.router.navigate(['/coachLogin'],{replaceUrl:true});
-    }
-    this.coachprofileService.viewDetail().subscribe(
-      message => {
-        const arr:any[]=message;
-        this.userDetail=arr[0];       
-    },
-    error => this.errorMessage = <any>error);
+  viewDetail():Observable<any>{
+    return this.http.get<any>(this.baseUrl).pipe(
+      catchError(this.handleError));
   }
-  coachLogout(){
-    sessionStorage.removeItem('CoachId');
-    this.router.navigate(['/home'],{replaceUrl:true});
+  private handleError(err: HttpErrorResponse) {
+    console.log(err);
+    return Observable.throw(err.error() || 'Server error');
   }
-
 }
